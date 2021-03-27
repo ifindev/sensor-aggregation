@@ -28,23 +28,52 @@ app.get("/room/:area", (req, res) => {
   }
 });
 
-app.get("/room/:area/day", (req, res) => {
+app.get("/room/:area/date", (req, res) => {
   /* Get room area number */
   let roomAreaNumber = parseInt(req.params.area);
 
-  /*  */
-
+  /* Get sensor data from JSON  */
   let sensorData = getDataFromJSON("data/sensor_data.json").array;
 
-  sensorData.map((data) => {
-    let dateTime = new Date(data.timestamp);
-    data.timestamp =
-      dateTime.getDate() +
-      "/" +
-      dateTime.getMonth() +
-      "/" +
-      dateTime.getFullYear();
-  });
+  if (roomAreaNumber > 0 && roomAreaNumber <= 3) {
+    /* Get room area data */
+    let roomArea = getRoomAreaData(sensorData, roomAreaNumber);
+
+    roomArea.map((data) => {
+      let dateTime = new Date(data.timestamp);
+      data.timestamp =
+        dateTime.getDate() +
+        "/" +
+        dateTime.getMonth() +
+        "/" +
+        dateTime.getFullYear();
+    });
+
+    /* get all the date-time key values */
+    let dateKey = roomArea.reduce(function (arrKey, dataVal) {
+      if (arrKey[dataVal.timestamp]) {
+        arrKey[dataVal.timestamp] += 1;
+      } else {
+        arrKey[dataVal.timestamp] = 1;
+      }
+      return arrKey;
+    }, {});
+
+    dateKey = Object.keys(dateKey);
+    console.log(dateKey);
+
+    /* Response send available day to be aggregated */
+    let respJSON = {
+      availableDateTime: {
+        ...dateKey,
+      },
+    };
+
+    /* Send response */
+    res.send(respJSON);
+  } else {
+    res.send({ error: true, msg: "room is not available" });
+  }
 });
 
 /* Get room area data by room area numnber */
