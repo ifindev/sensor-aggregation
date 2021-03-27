@@ -8,18 +8,15 @@ const port = 3000;
 app.use(express.json());
 
 app.get("/room/:area", (req, res) => {
+  /* Get room area number */
   let roomAreaNumber = parseInt(req.params.area);
 
+  /* Get Sensor Data */
   let sensorData = getDataFromJSON("data/sensor_data.json").array;
+
   if (roomAreaNumber > 0 && roomAreaNumber <= 3) {
-    let roomArea;
-    if (roomAreaNumber === 1) {
-      roomArea = sensorData.filter((data) => data.roomArea === "roomArea1");
-    } else if (roomAreaNumber === 2) {
-      roomArea = sensorData.filter((data) => data.roomArea === "roomArea2");
-    } else {
-      roomArea = sensorData.filter((data) => data.roomArea === "roomArea3");
-    }
+    /* Get room area data */
+    let roomArea = getRoomAreaData(sensorData, roomAreaNumber);
 
     /* get aggregated sensor data */
     let respJSON = getSensorAggregate(roomArea);
@@ -32,10 +29,36 @@ app.get("/room/:area", (req, res) => {
 });
 
 app.get("/room/:area/day", (req, res) => {
+  /* Get room area number */
   let roomAreaNumber = parseInt(req.params.area);
 
+  /*  */
+
   let sensorData = getDataFromJSON("data/sensor_data.json").array;
+
+  sensorData.map((data) => {
+    let dateTime = new Date(data.timestamp);
+    data.timestamp =
+      dateTime.getDate() +
+      "/" +
+      dateTime.getMonth() +
+      "/" +
+      dateTime.getFullYear();
+  });
 });
+
+/* Get room area data by room area numnber */
+const getRoomAreaData = (sensorData, roomAreaNumber) => {
+  if (roomAreaNumber === 1) {
+    roomArea = sensorData.filter((data) => data.roomArea === "roomArea1");
+  } else if (roomAreaNumber === 2) {
+    roomArea = sensorData.filter((data) => data.roomArea === "roomArea2");
+  } else {
+    roomArea = sensorData.filter((data) => data.roomArea === "roomArea3");
+  }
+
+  return roomArea;
+};
 
 /* Get Aggregated data from json */
 const getSensorAggregate = (arrData) => {
