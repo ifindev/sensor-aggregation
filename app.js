@@ -7,6 +7,7 @@ const port = 3000;
 
 app.use(express.json());
 
+/* First endpoint to get aggregate data by area number */
 app.get("/room/:area", (req, res) => {
   /* Get room area number */
   let roomAreaNumber = parseInt(req.params.area);
@@ -28,6 +29,7 @@ app.get("/room/:area", (req, res) => {
   }
 });
 
+/* Second endpoint to get available Datetime */
 app.get("/room/:area/date", (req, res) => {
   /* Get room area number */
   let roomAreaNumber = parseInt(req.params.area);
@@ -39,27 +41,11 @@ app.get("/room/:area/date", (req, res) => {
     /* Get room area data */
     let roomArea = getRoomAreaData(sensorData, roomAreaNumber);
 
-    roomArea.map((data) => {
-      let dateTime = new Date(data.timestamp);
-      data.timestamp =
-        dateTime.getDate() +
-        "/" +
-        dateTime.getMonth() +
-        "/" +
-        dateTime.getFullYear();
-    });
+    /* Convert timestamps data into date time data */
+    roomArea = convertTimestampToDate(roomArea);
 
-    /* get all the date-time key values */
-    let dateKey = roomArea.reduce(function (arrKey, dataVal) {
-      if (arrKey[dataVal.timestamp]) {
-        arrKey[dataVal.timestamp] += 1;
-      } else {
-        arrKey[dataVal.timestamp] = 1;
-      }
-      return arrKey;
-    }, {});
+    let dateKey = getDateKeys(roomArea);
 
-    dateKey = Object.keys(dateKey);
     console.log(dateKey);
 
     /* Response send available day to be aggregated */
@@ -75,6 +61,78 @@ app.get("/room/:area/date", (req, res) => {
     res.send({ error: true, msg: "room is not available" });
   }
 });
+
+/* Third Endpoint to get aggregate data based on date-time */
+app.get("/room/:area/date/:day/:month/:year", (req, res) => {
+  /* Get datetime from params */
+  const dateParams =
+    req.params.day + "/" + req.params.month + "/" + req.params.year;
+
+  /* Get room area number */
+  let roomAreaNumber = parseInt(req.params.area);
+
+  /* Get sensor data from JSON  */
+  let sensorData = getDataFromJSON("data/sensor_data.json").array;
+
+  if (roomAreaNumber > 0 && roomAreaNumber <= 3) {
+    /* Get room area data */
+    let roomArea = getRoomAreaData(sensorData, roomAreaNumber);
+
+    roomArea = convertTimestampToDate(roomArea);
+
+    let dateKey = getDateKeys(roomArea);
+
+    /* check queried date key is available or not */
+    const found = dateKey.find((date) => date === dateParams);
+
+    if (found) {
+      roomArea = roomArea.filter((data) => {
+        if (data.timestamp == dateParams) {
+          return data;
+        }
+      });
+
+      /* Get sensor aggregate data for this date */
+      let respJSON = getSensorAggregate(roomArea);
+
+      res.send(respJSON);
+    } else {
+      res.send({ error: true, msg: "data for that date is not available" });
+    }
+  } else {
+    res.send({ error: true, msg: "room is not available" });
+  }
+});
+
+const convertTimestampToDate = (arrData) => {
+  arrData.map((data) => {
+    let dateTime = new Date(data.timestamp);
+    data.timestamp =
+      dateTime.getDate() +
+      "/" +
+      dateTime.getMonth() +
+      "/" +
+      dateTime.getFullYear();
+  });
+
+  return arrData;
+};
+
+/* Get date key values */
+const getDateKeys = (arrData) => {
+  /* get all the date-time key values */
+  let dateKey = arrData.reduce(function (arrKey, dataVal) {
+    if (arrKey[dataVal.timestamp]) {
+      arrKey[dataVal.timestamp] += 1;
+    } else {
+      arrKey[dataVal.timestamp] = 1;
+    }
+    return arrKey;
+  }, {});
+
+  dateKey = Object.keys(dateKey);
+  return dateKey;
+};
 
 /* Get room area data by room area numnber */
 const getRoomAreaData = (sensorData, roomAreaNumber) => {
