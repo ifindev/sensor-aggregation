@@ -4,7 +4,7 @@ In this repo, you can find a simple and minimalist API endpoints used to aggrega
 
 - `/room/{area}`
 - `/room/{area}/date`
-- `/room/{area}/date/{day}/{month}/{year}
+- `/room/{area}/date/{day}/{month}/{year}`
 
 The first endpoint returns an aggregated sensor data for a specific room area. The second one returns the list of available date for the day aggregation. The last endpoint returns an aggregated sensor data for a specific room area in a specific day.
 
