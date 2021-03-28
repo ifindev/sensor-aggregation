@@ -15,7 +15,7 @@ To use and test this program on your own local machine, do these steps:
 - Clone this repository.
 - Go to the main folder, then run `npm install` for install all the dependencies.
 - Open `sensor_data.json` on `data` directory. Select all the data using `ctrl + a`, then delete. After that, write an empty array `[]` in it.
-- On the terminal, run `nodemon app.js`. The express server will start on port 3000.
+- On the terminal, run `node app.js`. The express server will start on port 3000.
 - Open up Postman, set request to GET. Then hit the API endpoint.
 
 ## Copyright
